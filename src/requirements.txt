@@ -1,0 +1,16 @@
+# Azure Functions runtime and core dependencies
+azure-functions
+
+# Azure service SDKs
+azure-cosmos                    # For Cosmos DB operations
+azure-identity                  # For Azure authentication (DefaultAzureCredential)
+azure-ai-inference              # For Azure OpenAI chat completions
+
+# Testing frameworks
+pytest                          # Core testing framework
+pytest-asyncio                  # Async testing support
+
+# Additional dependencies
+aiohttp                         # Async HTTP client/server framework
+# Additional dependencies
+aiohttp                         # Async HTTP client/server framework

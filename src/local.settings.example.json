@@ -1,0 +1,13 @@
+{
+  "IsEncrypted": false,
+  "Values": {
+    "AzureWebJobsStorage": "UseDevelopmentStorage=true",
+    "FUNCTIONS_WORKER_RUNTIME": "python",
+    "PYTHON_ENABLE_WORKER_EXTENSIONS": "True",
+    "COSMOSDB_DATABASE_NAME": "medicaldata",
+    "COSMOSDB_CONTAINER_NAME": "medical_records",
+    "OPENAI_MODEL_NAME": "gpt-4o",
+    "COSMOS_ENDPOINT": "https://<cosmos-account-name>.documents.azure.com:443/",
+    "AZURE_OPENAI_ENDPOINT": "https://<service-id>.openai.azure.com/"
+  }
+}

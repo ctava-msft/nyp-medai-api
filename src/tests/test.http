@@ -1,0 +1,96 @@
+### Medical Data Text-to-SQL API Test Suite
+# This file contains HTTP requests for testing the Medical Data Text-to-SQL Azure Functions endpoints.
+# It demonstrates typical usage scenarios:
+# - Converting natural language to SQL queries
+# - Retrieving sample medical data
+# - Uploading medical data records
+# - Health check monitoring
+
+### Basic Text-to-SQL Operations
+
+### Convert natural language to SQL and execute
+POST http://localhost:7071/api/text-to-sql
+Content-Type: application/json
+
+{
+    "query": "Show me all records for MEDCode 1302"
+}
+
+### Another natural language query
+POST http://localhost:7071/api/text-to-sql
+Content-Type: application/json
+
+{
+    "query": "Find measurements containing sodium"
+}
+
+### Complex query example
+POST http://localhost:7071/api/text-to-sql
+Content-Type: application/json
+
+{
+    "query": "Get all records where the slot is between 150 and 152 and the value contains blood"
+}
+
+### Sample Data Operations
+
+### Get sample medical data (default limit)
+GET http://localhost:7071/api/sample-data
+
+### Get sample medical data with custom limit
+GET http://localhost:7071/api/sample-data?limit=5
+
+### Data Management Operations
+
+### Upload medical data records
+POST http://localhost:7071/api/medical-data
+Content-Type: application/json
+
+{
+    "records": [
+        {
+            "MEDCode": 1308,
+            "Slot": 150,
+            "Value": "Cholesterol total"
+        },
+        {
+            "MEDCode": 1308,
+            "Slot": 151,
+            "Value": "180"
+        },
+        {
+            "MEDCode": 1309,
+            "Slot": 150,
+            "Value": "BMI"
+        },
+        {
+            "MEDCode": 1309,
+            "Slot": 151,
+            "Value": "24.5"
+        }
+    ]
+}
+
+### Health and Monitoring
+
+### Health check endpoint
+GET http://localhost:7071/api/health
+
+### API Management Endpoints (replace with your APIM URL)
+
+### Text-to-SQL via APIM
+POST https://your-apim-service.azure-api.net/medical/text-to-sql
+Content-Type: application/json
+Ocp-Apim-Subscription-Key: YOUR-SUBSCRIPTION-KEY
+
+{
+    "query": "Show me all blood pressure measurements"
+}
+
+### Sample data via APIM
+GET https://your-apim-service.azure-api.net/medical/sample-data?limit=5
+Ocp-Apim-Subscription-Key: YOUR-SUBSCRIPTION-KEY
+
+### Health check via APIM
+GET https://your-apim-service.azure-api.net/medical/health
+Ocp-Apim-Subscription-Key: YOUR-SUBSCRIPTION-KEY
