@@ -189,6 +189,18 @@ module aiProjectRoleAssignmentApi 'app/rbac/ai-project-access.bicep' = {
   }
 }
 
+// Allow access from api to Azure OpenAI
+var CognitiveServicesOpenAIUser = '5e0bd9bd-7b93-4f28-af87-19fc36ad61bd'
+module openAiRoleAssignmentApi 'app/rbac/cognitive-services-access.bicep' = {
+  name: 'openAiRoleAssignmentApi'
+  scope: rg
+  params: {
+    cognitiveServicesName: openai.outputs.aiServicesName
+    roleDefinitionId: CognitiveServicesOpenAIUser
+    principalId: apiUserAssignedIdentity.outputs.principalId
+  }
+}
+
 // Azure API Management for API gateway
 module apiManagement './app/apim.bicep' = {
   name: 'apiManagement'
@@ -230,6 +242,7 @@ module api './app/api.bicep' = {
     queueRoleAssignmentApi
     appInsightsRoleAssignmentApi
     aiProjectRoleAssignmentApi
+    openAiRoleAssignmentApi
   ]
 }
 

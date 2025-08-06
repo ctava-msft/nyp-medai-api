@@ -12,7 +12,5 @@ pytest-asyncio                  # Async testing support
 
 # Additional dependencies
 aiohttp                         # Async HTTP client/server framework
-# Additional dependencies
-aiohttp                         # Async HTTP client/server framework
 
-openai
+openai>=1.0.0                   # OpenAI SDK with Azure support

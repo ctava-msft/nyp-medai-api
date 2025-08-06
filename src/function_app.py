@@ -146,12 +146,16 @@ class MedicalDataProcessor:
             
             # Use managed identity for authentication
             credential = DefaultAzureCredential()
-            token = await credential.get_token("https://cognitiveservices.azure.com/.default")
+            
+            # Create a token provider function that returns just the token string
+            async def get_azure_ad_token():
+                token = await credential.get_token("https://cognitiveservices.azure.com/.default")
+                return token.token
             
             self.openai_client = AsyncAzureOpenAI(
                 azure_endpoint=endpoint,
                 api_version=api_version,
-                azure_ad_token=token.token
+                azure_ad_token_provider=get_azure_ad_token
             )
             
             logger.info("Successfully connected to Azure OpenAI")
@@ -277,10 +281,12 @@ class MedicalDataProcessor:
             
             # Execute query against CosmosDB
             items = []
-            async for item in self.container.query_items(
+            query_iterable = self.container.query_items(
                 query=sql_query,
                 enable_cross_partition_query=True
-            ):
+            )
+            
+            async for item in query_iterable:
                 items.append(item)
             
             logger.info(f"Query executed successfully, returned {len(items)} rows")
@@ -346,10 +352,12 @@ class MedicalDataProcessor:
         try:
             query = f"SELECT TOP {limit} * FROM c ORDER BY c.MEDCode"
             items = []
-            async for item in self.container.query_items(
+            query_iterable = self.container.query_items(
                 query=query,
                 enable_cross_partition_query=True
-            ):
+            )
+            
+            async for item in query_iterable:
                 items.append(item)
             
             logger.info(f"Retrieved {len(items)} sample records")
