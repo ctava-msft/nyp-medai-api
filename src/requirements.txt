@@ -14,3 +14,5 @@ pytest-asyncio                  # Async testing support
 aiohttp                         # Async HTTP client/server framework
 # Additional dependencies
 aiohttp                         # Async HTTP client/server framework
+
+openai

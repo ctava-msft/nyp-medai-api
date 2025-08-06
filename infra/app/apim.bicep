@@ -15,7 +15,7 @@ param publisherName string = 'Medical Data API Publisher'
 
 @description('Pricing tier of the APIM service')
 @allowed(['Developer', 'Basic', 'Standard', 'Premium', 'Consumption'])
-param sku string = 'Developer'
+param sku string = 'Standard'
 
 @description('The Azure Function App backend URL')
 param functionAppUrl string

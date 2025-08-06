@@ -9,7 +9,7 @@
 ### Basic Text-to-SQL Operations
 
 ### Convert natural language to SQL and execute
-POST http://localhost:7071/api/text-to-sql
+POST http://func-api-zkiig7k4hbbf6.azurewebsites.net:7071/api/text-to-sql
 Content-Type: application/json
 
 {

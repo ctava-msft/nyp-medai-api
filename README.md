@@ -120,6 +120,17 @@ curl "https://your-function-app.azurewebsites.net/api/sample-data?limit=5"
 curl "https://your-function-app.azurewebsites.net/api/health"
 ```
 
+1. Install required packages:
+
+    ```shell
+    python -m venv .venv 
+    .\.venv\Scripts\activate
+    ```
+
+    ```shell
+    pip install -r requirements.txt
+    ```
+
 ### Via API Management
 
 ```bash

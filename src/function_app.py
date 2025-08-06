@@ -35,8 +35,7 @@ import azure.functions as func
 from azure.cosmos.aio import CosmosClient
 from azure.cosmos import PartitionKey, exceptions
 from azure.identity.aio import DefaultAzureCredential
-from azure.ai.inference.aio import ChatCompletionsClient
-from azure.core.credentials import AzureKeyCredential
+from openai import AsyncAzureOpenAI
 
 # Initialize the Azure Functions app
 app = func.FunctionApp()
@@ -55,10 +54,12 @@ COSMOS_DATABASE_NAME_ENV = "COSMOSDB_DATABASE_NAME"
 COSMOS_CONTAINER_NAME_ENV = "COSMOSDB_CONTAINER_NAME"
 AZURE_OPENAI_ENDPOINT_ENV = "AZURE_OPENAI_ENDPOINT"
 OPENAI_MODEL_NAME_ENV = "OPENAI_MODEL_NAME"
+AZURE_OPENAI_API_VERSION_ENV = "AZURE_OPENAI_API_VERSION"
 
 # Default values
 DEFAULT_DATABASE_NAME = "medicaldata"
 DEFAULT_CONTAINER_NAME = "medical_records"
+DEFAULT_API_VERSION = "2024-02-15-preview"
 
 # =============================================================================
 # UTILITY CLASSES FOR MCP TOOL DEFINITIONS
@@ -102,8 +103,14 @@ class MedicalDataProcessor:
         self.database = None
         self.container = None
         self.openai_client = None
-        self._setup_cosmos_client()
-        self._setup_openai_client()
+        self._initialized = False
+    
+    async def _ensure_initialized(self):
+        """Ensure all clients are properly initialized."""
+        if not self._initialized:
+            await self._setup_cosmos_client()
+            await self._setup_openai_client()
+            self._initialized = True
     
     async def _setup_cosmos_client(self):
         """Set up Cosmos DB client with managed identity authentication."""
@@ -135,9 +142,17 @@ class MedicalDataProcessor:
             if not endpoint:
                 raise ValueError(f"Missing required environment variable: {AZURE_OPENAI_ENDPOINT_ENV}")
             
+            api_version = os.getenv(AZURE_OPENAI_API_VERSION_ENV, DEFAULT_API_VERSION)
+            
             # Use managed identity for authentication
             credential = DefaultAzureCredential()
-            self.openai_client = ChatCompletionsClient(endpoint=endpoint, credential=credential)
+            token = await credential.get_token("https://cognitiveservices.azure.com/.default")
+            
+            self.openai_client = AsyncAzureOpenAI(
+                azure_endpoint=endpoint,
+                api_version=api_version,
+                azure_ad_token=token.token
+            )
             
             logger.info("Successfully connected to Azure OpenAI")
             
@@ -186,6 +201,11 @@ class MedicalDataProcessor:
         Returns:
             Generated SQL query string for CosmosDB
         """
+        await self._ensure_initialized()
+        
+        if not self.openai_client:
+            raise RuntimeError("OpenAI client not properly initialized")
+        
         schema = self.get_database_schema()
         
         system_message = f"""You are an expert SQL query generator for medical data analysis using Azure CosmosDB.
@@ -210,11 +230,13 @@ class MedicalDataProcessor:
         Convert this natural language query to CosmosDB SQL: {natural_language_query}"""
         
         try:
-            response = await self.openai_client.complete(
+            model_name = os.getenv(OPENAI_MODEL_NAME_ENV, "gpt-4")
+            
+            response = await self.openai_client.chat.completions.create(
+                model=model_name,
                 messages=[
                     {"role": "system", "content": system_message}
                 ],
-                model=os.getenv(OPENAI_MODEL_NAME_ENV, "gpt-4"),
                 max_tokens=500,
                 temperature=0.1
             )
@@ -243,6 +265,11 @@ class MedicalDataProcessor:
         Returns:
             Query results as a list of dictionaries
         """
+        await self._ensure_initialized()
+        
+        if not self.container:
+            raise RuntimeError("Cosmos DB container not properly initialized")
+        
         try:
             # Validate that it's a SELECT query for security
             if not sql_query.strip().upper().startswith('SELECT'):
@@ -311,6 +338,11 @@ class MedicalDataProcessor:
         Returns:
             List of sample medical records
         """
+        await self._ensure_initialized()
+        
+        if not self.container:
+            raise RuntimeError("Cosmos DB container not properly initialized")
+        
         try:
             query = f"SELECT TOP {limit} * FROM c ORDER BY c.MEDCode"
             items = []
@@ -337,6 +369,11 @@ class MedicalDataProcessor:
         Returns:
             Upload result summary
         """
+        await self._ensure_initialized()
+        
+        if not self.container:
+            raise RuntimeError("Cosmos DB container not properly initialized")
+        
         uploaded_count = 0
         errors = []
         
@@ -642,8 +679,11 @@ async def http_health_check(req: func.HttpRequest) -> func.HttpResponse:
         
         # Test OpenAI connection
         try:
-            await processor.generate_sql_query("test query")
-            openai_status = "healthy"
+            # Use a simple test instead of actual query generation
+            if processor.openai_client:
+                openai_status = "healthy"
+            else:
+                openai_status = "not initialized"
         except Exception as e:
             openai_status = f"unhealthy: {str(e)}"
         

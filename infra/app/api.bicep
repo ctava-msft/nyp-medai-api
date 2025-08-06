@@ -96,13 +96,37 @@ module api 'br/public:avm/res/web/site:0.15.1' = {
         PYTHON_ENABLE_WORKER_EXTENSIONS: '1'
         AZURE_CLIENT_ID: identityClientId
         FUNCTIONS_EXTENSION_VERSION: '~4'
+        AzureWebJobsDisableHomepage: 'true'
       })
     virtualNetworkSubnetId: !empty(virtualNetworkSubnetId) ? virtualNetworkSubnetId : null
     siteConfig: {
       alwaysOn: false
+      cors: {
+        allowedOrigins: ['*']
+        supportCredentials: false
+      }
+      functionAppScaleLimit: maximumInstanceCount
+      use32BitWorkerProcess: false
+    }
+    authSettingV2Configuration: {
+      globalValidation: {
+        requireAuthentication: false
+        unauthenticatedClientAction: 'AllowAnonymous'
+      }
+      httpSettings: {
+        requireHttps: true
+        routes: {
+          apiPrefix: '/.auth'
+        }
+      }
+      platform: {
+        enabled: true
+        runtimeVersion: '~1'
+      }
     }
   }
 }
 
 output SERVICE_API_NAME string = api.outputs.name
 output SERVICE_API_IDENTITY_PRINCIPAL_ID string = identityType == 'SystemAssigned' ? api.outputs.?systemAssignedMIPrincipalId ?? '' : ''
+output SERVICE_API_URI string = 'https://${api.outputs.defaultHostname}'
